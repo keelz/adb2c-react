@@ -1,0 +1,15 @@
+.Login {
+  margin-top: 25px;
+}
+
+.Login button {
+  margin-left: 25px;
+  margin-right: 25px;
+  height: 3em;
+  font-size: 2em;
+  border-radius: 25px;
+}
+
+.Login button:hover {
+  cursor: pointer;
+}
