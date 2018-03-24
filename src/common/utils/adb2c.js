@@ -148,7 +148,7 @@ class Adal {
       }
 
       // verify token signature & decode.
-      jwt.verify(token, signingKey.publicKey, { algorithms: ['RS256'] }, (err, decoded) => {
+      jwt.verify(token, signingKey.publicKey, { algorithms: header['alg'] }, (err, decoded) => {
         if (err) {
           return cb && cb(err);
         }
