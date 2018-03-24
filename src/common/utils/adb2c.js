@@ -15,7 +15,7 @@ const {
 
 const { TENANT_NAME } = currentConfig;
 
-const { POLICY_NAME } = queryParams;
+const { CLIENT_ID, NONCE, POLICY_NAME } = queryParams;
 
 const rootUri = `${AUTH_DOMAIN}`.replace(TENANT_KEY, TENANT_NAME);
 
@@ -45,17 +45,32 @@ class Adal {
     !env.isDevelopment && stateKey && localStorage.removeItem(parsedHash['state']);
     return stateKey &&
       parsedHash['id_token'] &&
-      this._validateToken(parsedHash['id_token'], this._persistToken);
+      parsedHash['code'] &&
+      this._validateToken(parsedHash['id_token'], parsedHash['code'], this._persistToken);
   }
 
-  _persistToken(err, data) {
+  async _persistToken(err, { decoded, code }) {
     if (err) {
       return env.isDevelopment && console.log(err.message);
     }
-    console.log(JSON.stringify(data, null, 4));
+    // at this point i need to hand control off to the api.
+    // the api needs to make the request to obtain the bearer token.
+    // the bearer token is then returned to the web app for
+    // subsequent calls to the api.
+    // once that flow is complete i will then need to add
+    // the bearer token to all api requests via an axios middleware
+    // function.
+
+    // 1. make async request to api.
+
+    // 2. parse bearer token from api response.
+
+    // 3. persist bearer token via axios middleware.
+
+    console.log('process complete, time to fetch a bearer token');
   }
 
-  async _validateToken(token, cb) {
+  async _validateToken(token, code, cb) {
     try {
       const validAcr = (acr) => acr === String(currentConfig[POLICY_NAME]).toLowerCase();
       const base64ToString = (x) => new Buffer(x, 'base64').toString('ascii');
@@ -148,11 +163,17 @@ class Adal {
       }
 
       // verify token signature & decode.
-      jwt.verify(token, signingKey.publicKey, { algorithms: header['alg'] }, (err, decoded) => {
+      jwt.verify(token, signingKey.publicKey, { algorithms: header['alg'] }, async (err, decoded) => {
         if (err) {
           return cb && cb(err);
         }
-        cb && cb(null, decoded);
+        if (decoded['nonce'] !== currentConfig[NONCE]) {
+          return cb && cb(new Error('nonce validation failed'));
+        }
+        if (decoded['aud'] !== currentConfig[CLIENT_ID]) {
+          return cb && cb(new Error('aud validation failed'));
+        }
+        cb && cb(null, { decoded, code });
       });
     } catch (err) {
       cb && cb(err);
