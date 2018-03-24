@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { signIn } from '../../common/utils/adb2c';
 import Login from '../Login';
 import logo from '../../common/assets/img/logo.svg';
 import './App.css';
@@ -15,10 +16,6 @@ class App extends Component {
       </div>
     );
   }
-}
-
-function signIn() {
-  console.log('sign in');
 }
 
 function signOut() {
